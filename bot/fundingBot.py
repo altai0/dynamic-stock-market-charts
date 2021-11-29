@@ -8,7 +8,7 @@ from tinydb import TinyDB, Query
 import asyncio
 import fonksiyonlar
 
-TOKEN = 'OTE0ODQ5MTIyMzgzNzI0NTU1.YaTBow.5kC7eK0Ar4UECZ5e12izGqsoH18'
+TOKEN = 'OTE0ODQ5MTIyMzgzNzI0NTU1.YaTBow.ouOKIutxB3GAHzoPPMVSLMf_Z08'
 btcDb = TinyDB('btcDb.json')
 exchange = ccxt.binance()
 client = discord.Client()
@@ -23,7 +23,7 @@ async def on_ready():
 
 async def background_task():
     await client.wait_until_ready()
-    channel = client.get_channel(id=914825855472119828)
+    channel = client.get_channel(id=914892130273624104)
 
     while not client.is_closed():
         # print('selam')

@@ -77,7 +77,7 @@ async def on_ready():
 
 async def background_whale_alert():
     await client.wait_until_ready()
-    channel = client.get_channel(id=914825855472119828)
+    channel = client.get_channel(id=914892130273624104)
 
     while not client.is_closed():
         data = func.fetchWhale()
@@ -204,6 +204,6 @@ async def on_message(message):
             return
 
 
-TOKEN = 'OTExNTk4MTUwMTk0NzA4NTIw.YZjt7w.WKlFuSWJ4lOTVYB8fUXjLT19hVg'
+TOKEN = 'OTExNTk4MTUwMTk0NzA4NTIw.YZjt7w.ZQy3DXjOEvIGXegur-_Sih1EXHY'
 client.loop.create_task(background_whale_alert())
 client.run(TOKEN)
