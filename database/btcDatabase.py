@@ -46,5 +46,4 @@ while True:
     zaman = time.time()
     item = {'puan': data['puan'], 'fiyat': data['price'], 'zaman': zaman}
     db.insert(item)
-    # print(item)
     time.sleep(1800)

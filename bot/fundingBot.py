@@ -10,14 +10,10 @@ import fonksiyonlar
 
 TOKEN = 'OTE0ODQ5MTIyMzgzNzI0NTU1.YaTBow.5kC7eK0Ar4UECZ5e12izGqsoH18'
 btcDb = TinyDB('btcDb.json')
-ethDb = TinyDB('ethDb.json')
 exchange = ccxt.binance()
 client = discord.Client()
 
 func = fonksiyonlar.funcAnalysis()
-LAST_DB_BTC = btcDb.get(doc_id=len(btcDb))
-LAST_DB_ETH = ethDb.get(doc_id=len(ethDb))
-# print(LAST_DB['puan'])
 
 
 @client.event
@@ -30,8 +26,29 @@ async def background_task():
     channel = client.get_channel(id=914825855472119828)
 
     while not client.is_closed():
-        print('selam')
-        await asyncio.sleep(5)
+        # print('selam')
+        item = func.spesifikFundingCalculate('btc')
+        price = func.ticker_price('btc')
+        allData = item['fundingData']
+        puan = item['puan']
+        embedVar = discord.Embed(
+            title="30 minute alert  ***", description=f'Bitcoin  {price}', color=0x202124)
+        embedVar.add_field(
+            name="Hesaplanan Puan", value=f'({puan}) ', inline=False)
+        for dik in allData:
+            if dik['rate'] > 0.01:
+                exchange = dik['exchange']
+                rate = dik['rate']
+                embedVar.add_field(
+                    name=f'Negatif Etken\n{exchange}', value=f'{rate}', inline=True)
+            elif dik['rate'] < 0.01:
+                exchange = dik['exchange']
+                rate = dik['rate']
+                embedVar.add_field(
+                    name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
+
+        await channel.send(embed=embedVar)
+        await asyncio.sleep(1800)
 
 
 @client.event
@@ -52,7 +69,7 @@ async def on_message(message):
             allData = item['fundingData']
             puan = item['puan']
             embedVar = discord.Embed(
-                title="Algoritma Sonucu ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
+                title="Result ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
             embedVar.add_field(
                 name="Hesaplanan Puan", value=f'({puan}) ', inline=False)
             for dik in allData:
