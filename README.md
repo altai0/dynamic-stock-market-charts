@@ -1,3 +1,3 @@
-# created by altai
+# altai
 
 funding rate analizi - discord botu
