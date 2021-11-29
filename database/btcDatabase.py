@@ -40,24 +40,11 @@ def fundingCalculate(symbol):
     return data
 
 
-POINT = 0
 while True:
-    if POINT == 0:
-        data = fundingCalculate('btc')
-        zaman = time.time()
-        item = {'puan': data['puan'], 'fiyat': data['price'], 'zaman': zaman}
-        db.insert(item)
-        POINT = float(data['puan'])
-        print('...ilk kayıt başarılı...' + str(item))
-    else:
-        data = fundingCalculate('btc')
-        if POINT == data['puan']:
-            selam = 'değişiklik yok'
-        else:
-            zaman = time.time()
-            item = {'puan': data['puan'],
-                    'fiyat': data['price'], 'zaman': zaman}
-            db.insert(item)
-            POINT = float(data['puan'])
-            print('...fiyat değişikliği kayıt edildi...')
-    time.sleep(5)
+    data = fundingCalculate('btc')
+    number = data['puan']
+    zaman = time.time()
+    item = {'puan': data['puan'], 'fiyat': data['price'], 'zaman': zaman}
+    db.insert(item)
+    # print(item)
+    time.sleep(1800)
