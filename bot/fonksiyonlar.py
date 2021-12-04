@@ -84,9 +84,12 @@ class funcAnalysis():
         fig.write_image('satim.png')
 
     def ticker_price(self, symbol):
-        binance = ccxt.binance()
-        price_ticker = binance.fetch_ticker(symbol.upper()+'/USDT')
-        return price_ticker['last']
+        try:
+            binance = ccxt.binance()
+            price_ticker = binance.fetch_ticker(symbol.upper()+'/USDT')
+            return price_ticker['last']
+        except:
+            return 'error'
 
     def get_fear(self):
         req = requests.get('https://api.alternative.me/fng/')

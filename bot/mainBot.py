@@ -138,30 +138,10 @@ async def on_message(message):
         if user_message.lower().split()[0] == 'fiyat':
             symbol = user_message.lower().split()[1]
             price = func.ticker_price(symbol)
-            await message.channel.send(f' Güncel Fiyat : {price} USD')
-        if user_message.lower().split()[0] == 'puan':
-            symbol = user_message.lower().split()[1]
-            price = func.ticker_price(symbol)
-            item = func.spesifikFundingCalculate(symbol)
-            allData = item['fundingData']
-            puan = item['puan']
-            embedVar = discord.Embed(
-                title="Algoritma Sonucu ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
-            embedVar.add_field(
-                name="Hesaplanan Puan", value=f'({puan}) ', inline=False)
-            for dik in allData:
-                if dik['rate'] > 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Negatif Etken\n{exchange}', value=f'{rate}', inline=True)
-                elif dik['rate'] < 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
-
-            await message.channel.send(embed=embedVar)
+            if price == 'error':
+                await message.channel.send(f'Hatalı sembol girdiniz...')
+            else:
+                await message.channel.send(f' Güncel Fiyat : {price} USD')
         # destek direnç bölgeleri
         if user_message.lower().split()[0] == 'grafik':
             symbol = user_message.lower().split()[1]
