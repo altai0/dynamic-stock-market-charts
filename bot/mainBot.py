@@ -83,18 +83,19 @@ async def background_whale_alert():
         data = func.fetchWhale()
         transactions = data['transactions']
         embedVar = discord.Embed(
-            title="Balina Uyarıları ***", description="", color=0x202124)
+            title="Balina Uyarıları ***", description="Sadece borsaya girenleri göster `(AKTİF)`", color=0x202124)
 
         for ixa in transactions:
-            blockchain = ixa['blockchain']
+            #blockchain = ixa['blockchain']
             symbol = ixa['symbol']
             amount = "${:,.2f}".format(ixa['amount_usd'])
             nereden = ixa['from']['owner_type']
             nereye = ixa['to']['owner_type']
             zaman = ixa['timestamp']
             dt_obj = datetime.fromtimestamp(zaman)
-            embedVar.add_field(
-                name=f'{blockchain}\n{dt_obj}', value=f'Sembol = {symbol}\nMiktar = {amount}\n( {nereden} -> {nereye} )', inline=True)
+            if nereye == 'exchange':
+                embedVar.add_field(
+                    name=f'`{symbol}`\n{dt_obj}', value=f'miktar = {amount}\n( {nereden} -> {nereye} )', inline=True)
         # for end
         await channel.send(embed=embedVar)
         await asyncio.sleep(7200)
@@ -117,12 +118,17 @@ async def on_message(message):
             embedVar.add_field(
                 name="grafik sembol time", value="Destek-Direnç Gösterir", inline=False)
             embedVar.add_field(
-                name="piyasa", value="Güncel piyasa bilgilerini gösterir.", inline=False)
+                name="piyasa", value="Güncel piyasa bilgilerini gösterir", inline=False)
             embedVar.add_field(name="alımdefter sembol",
-                               value="Alım emirlerinin yoğunlaştığı bölgeleri gösterir.", inline=False)
+                               value="Alım emirlerinin yoğunlaştığı bölgeleri gösterir", inline=False)
             embedVar.add_field(name="satımdefter sembol",
-                               value="Satım emirlerinin yoğunlaştığı bölgeleri gösterir.", inline=False)
-
+                               value="Satım emirlerinin yoğunlaştığı bölgeleri gösterir", inline=False)
+            embedVar.add_field(name="puan sembol",
+                               value="Fonlama oranı analizi yapar", inline=False)
+            embedVar.add_field(name="takip sembol",
+                               value="30 dakikalık yakın takibi açar", inline=False)
+            embedVar.add_field(name="veri sembol",
+                               value="Takip edilen kripto para biriminin verilerini gösterir", inline=False)
             await message.channel.send(embed=embedVar)
         # alım ısı haritası
         if user_message.lower().split()[0] == 'alımdefter':

@@ -13,7 +13,7 @@ class funcAnalysis():
 
     def fetchWhale(self):
         req = requests.get(
-            'https://api.whale-alert.io/v1/transactions?api_key=H1722a89y8XBb4mRzUpZfPiCFXPpVE3r&min_value=500000&limit=12')
+            'https://api.whale-alert.io/v1/transactions?api_key=H1722a89y8XBb4mRzUpZfPiCFXPpVE3r&min_value=500000&limit=50')
         res = req.json()
         return res
 
