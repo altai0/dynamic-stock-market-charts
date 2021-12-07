@@ -172,10 +172,12 @@ class funcAnalysis():
         backDay = 0
         nowDay = 0
         for ixa in dataMap:
-            oldMap = dataMap[ixa][-2]
-            nowMap = dataMap[ixa][-1]
-            nowDay += float(nowMap)
-            backDay += float(oldMap)
+            if ixa != 'CME' and ixa != 'Kraken' and ixa != 'Bitfinex' and ixa != 'Bitget' and ixa != 'dYdX':
+                oldMap = dataMap[ixa][-2]
+                nowMap = dataMap[ixa][-1]
+                if nowDay != 'None' and oldMap != 'None':
+                    nowDay += float(nowMap)
+                    backDay += float(oldMap)
         dundenBuguneDegisimOrani = ((nowDay - backDay) / backDay) * 100
 
         item = {'openPositionYesterday': backDay, 'openPositionToday': nowDay,
@@ -291,3 +293,8 @@ class funcAnalysis():
                     "desc": "Nötr -> Fiyat yükseliyor,pozisyonlar düşüyor (Açık Long Fazla) !"
                 }
                 return item
+
+
+func = funcAnalysis()
+
+print(func.ileriSeviyeAnaliz('eth'))
