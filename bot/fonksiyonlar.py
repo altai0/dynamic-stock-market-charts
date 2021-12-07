@@ -293,8 +293,3 @@ class funcAnalysis():
                     "desc": "Nötr -> Fiyat yükseliyor,pozisyonlar düşüyor (Açık Long Fazla) !"
                 }
                 return item
-
-
-func = funcAnalysis()
-
-print(func.ileriSeviyeAnaliz('eth'))
