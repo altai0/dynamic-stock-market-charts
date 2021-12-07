@@ -126,9 +126,11 @@ async def on_message(message):
             embedVar.add_field(name="puan sembol",
                                value="Fonlama oranı analizi yapar", inline=False)
             embedVar.add_field(name="takip sembol",
-                               value="30 dakikalık yakın takibi açar", inline=False)
+                               value="Veritabanı yakın takibi açar", inline=False)
             embedVar.add_field(name="veri sembol",
                                value="Takip edilen kripto para biriminin verilerini gösterir", inline=False)
+            embedVar.add_field(name="takipler",
+                               value="Tüm takip edilen kripto para birimlerini gösterir", inline=False)
             await message.channel.send(embed=embedVar)
         # alım ısı haritası
         if user_message.lower().split()[0] == 'alımdefter':

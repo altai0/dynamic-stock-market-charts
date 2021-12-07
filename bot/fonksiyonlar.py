@@ -116,9 +116,9 @@ class funcAnalysis():
         for isak in fundingRate:
             if isak['rate'] <= 0.01:
                 puan += 16
-            elif isak['rate'] < 0.035 and isak['rate'] > 0.02:
+            elif isak['rate'] > 0.025:
                 puan -= 16
-            elif isak['rate'] > 0.035:
+            elif isak['rate'] < 0.035:
                 puan -= 16
 
         data = {'puan': puan, 'fundingData': fundingRate, 'symbol': sembol}
@@ -154,3 +154,140 @@ class funcAnalysis():
         item = {'liqShort': liqidation[0]['shortRate'],
                 'liqLong': liqidation[0]['longRate']}
         return item
+
+    def ticker_price_24h(self, symbol):
+        req = requests.get(
+            'https://api.binance.com/api/v3/ticker/24hr?symbol='+symbol.upper()+'USDT')
+        res = req.json()
+        percentage24h = res['priceChangePercent']
+        return percentage24h
+
+    def fetch_open_interest(self):
+        req = requests.get(
+            'https://fapi.coinglass.com/api/openInterest/v3/chart?symbol=BTC&timeType=0&exchangeName=&type=0')
+        res = req.json()
+        data = res['data']
+        dataMap = data['dataMap']
+        # dün ve bugünün total interest kayıt et
+        backDay = 0
+        nowDay = 0
+        for ixa in dataMap:
+            oldMap = dataMap[ixa][-2]
+            nowMap = dataMap[ixa][-1]
+            nowDay += float(nowMap)
+            backDay += float(oldMap)
+        dundenBuguneDegisimOrani = ((nowDay - backDay) / backDay) * 100
+
+        item = {'openPositionYesterday': backDay, 'openPositionToday': nowDay,
+                'positionPercentage': dundenBuguneDegisimOrani}
+        return item
+
+    def ileriSeviyeAnaliz(self, symbol):
+
+        item = self.spesifikFundingCalculate(symbol)
+        percentage = self.ticker_price_24h(symbol)
+        fearIndex = self.get_fear()
+        openInterest = self.fetch_open_interest()
+        if float(percentage) > 0 and float(openInterest['positionPercentage']) > 0:
+            # fiyat arttıkça açık pozisyon artıyor ise düşüş gelebilir dikkat edilmesi gerek,funding rateye bak,korkuya bak
+            print('fiyat arttı pozisyon arttı')
+            if float(item['puan']) < 64:
+                if float(fearIndex['puan']) > 50:
+                    item = {
+                        "fundingRatePuanı": item['puan'],
+                        "fearIndex": fearIndex['puan'],
+                        "openInterestPercentage": openInterest['positionPercentage'],
+                        "price24hPercentage": percentage,
+                        "desc": "Çok Riskli !"
+                    }
+                    return item
+                else:
+                    item = {
+                        "fundingRatePuanı": item['puan'],
+                        "fearIndex": fearIndex['puan'],
+                        "openInterestPercentage": openInterest['positionPercentage'],
+                        "price24hPercentage": percentage,
+                        "desc": "Riskli !"
+                    }
+                    return item
+            else:
+                if float(fearIndex['puan']) < 50:
+                    item = {
+                        "fundingRatePuanı": item['puan'],
+                        "fearIndex": fearIndex['puan'],
+                        "openInterestPercentage": openInterest['positionPercentage'],
+                        "price24hPercentage": percentage,
+                        "desc": "Kısa Vade Risk !"
+                    }
+                    return item
+                else:
+                    item = {
+                        "fundingRatePuanı": item['puan'],
+                        "fearIndex": fearIndex['puan'],
+                        "openInterestPercentage": openInterest['positionPercentage'],
+                        "price24hPercentage": percentage,
+                        "desc": "Fiyat Şişmiş Olabilir -> Negatif !"
+                    }
+                    return item
+        elif float(percentage) < 0 and float(openInterest['positionPercentage']) < 0:
+            # fiyat düşmüş açık pozisyonda düşmüş POZİTİF funding rate de düşmüş ise ULTRA POZİTİF,funding rate bak
+            print('fiyat düştü pozisyon düştü')
+            if float(item['puan']) > 32:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Ultra Pozitif !"
+                }
+                return item
+            else:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Kısa Vade Pozitif !"
+                }
+                return item
+        elif float(percentage) < 0 and float(openInterest['positionPercentage']) > 0:
+            # fiyat düşmüş pozisyonlar artmış negatif sinyal funding rate - ye inmişse ULTRA NEGATİF düşüş devam edecek
+            print('fiyat düştü pozisyon arttı')
+            if float(item['puan']) < 32:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Ultra Negatif -> Düşüş Devam Edebilir !"
+                }
+                return item
+            else:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Az Negatif -> Düşüş Devam Edebilir !"
+                }
+                return item
+        elif float(percentage) > 0 and float(openInterest['positionPercentage']) < 0:
+            # fiyat yükselmiş pozisyonlar düşmüş POZİTİF funding rate 32 > ultra pozitif
+            if float(item['puan']) > 32:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Ultra Pozitif -> Fiyat yükseliyor,pozisyonlar düşüyor !"
+                }
+                return item
+            else:
+                item = {
+                    "fundingRatePuanı": item['puan'],
+                    "fearIndex": fearIndex['puan'],
+                    "openInterestPercentage": openInterest['positionPercentage'],
+                    "price24hPercentage": percentage,
+                    "desc": "Nötr -> Fiyat yükseliyor,pozisyonlar düşüyor (Açık Long Fazla) !"
+                }
+                return item

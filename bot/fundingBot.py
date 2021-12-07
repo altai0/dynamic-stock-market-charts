@@ -54,18 +54,25 @@ async def background_task():
         price = func.ticker_price('btc')
         allData = item['fundingData']
         puan = item['puan']
-
-        kayitData = {'puan': puan, 'price': price}
+        btcNow = datetime.datetime.now()
+        btcStringNow = btcNow.strftime("%Y-%m-%d %H:%M")
+        kayitData = {'puan': puan, 'price': price, 'zaman': btcStringNow}
         edatabase.insert(kayitData)
         print('KAYIT YAPILDI')
         # TAKİP ET
         gecmisveri = edatabase.all()
+        time.sleep(0.5)
+        ileriSeviyeSonuc = func.ileriSeviyeAnaliz('btc')
+        ileriDesc = ileriSeviyeSonuc['desc']
+        ileriPercentage = ileriSeviyeSonuc['openInterestPercentage']
 
         if gecmisveri[-1]['puan'] == gecmisveri[-2]['puan']:
             embedVar = discord.Embed(
-                title="30 Dakikalık Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
+                title="Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
             embedVar.add_field(
-                name="Hesaplanan Puan", value=f'({puan}) ', inline=False)
+                name="Funding Rate Puanı", value=f'({puan}) ', inline=False)
+            embedVar.add_field(
+                name="İleri Seviye Analiz", value=f'({ileriDesc})\nPozisyon Değişimi\n%{ileriPercentage}', inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
@@ -77,13 +84,20 @@ async def background_task():
                     rate = dik['rate']
                     embedVar.add_field(
                         name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
+                elif dik['rate'] == 0.01:
+                    exchange = dik['exchange']
+                    rate = dik['rate']
+                    embedVar.add_field(
+                        name=f'Nötr\n{exchange}', value=f'{rate}', inline=True)
             await channel.send(embed=embedVar)
         else:
             eskiPuan = gecmisveri[-2]['puan']
             embedVar = discord.Embed(
-                title="30 Dakikalık Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
+                title="Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
             embedVar.add_field(
-                name="Hesaplanan Puan", value=f'({eskiPuan}) ---> ({puan})', inline=False)
+                name="Funding Rate Puanı", value=f'({eskiPuan}) ---> ({puan})', inline=False)
+            embedVar.add_field(
+                name="İleri Seviye Analiz", value=f'({ileriDesc})\nPozisyon Değişimi\n%{ileriPercentage}', inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
@@ -95,8 +109,13 @@ async def background_task():
                     rate = dik['rate']
                     embedVar.add_field(
                         name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
+                elif dik['rate'] == 0.01:
+                    exchange = dik['exchange']
+                    rate = dik['rate']
+                    embedVar.add_field(
+                        name=f'Nötr\n{exchange}', value=f'{rate}', inline=True)
             await channel.send(embed=embedVar)
-        await asyncio.sleep(1800)
+        await asyncio.sleep(14400)
 
 
 @client.event
@@ -113,17 +132,30 @@ async def on_message(message):
         # veritabanındaki verileri göster
         if user_message.lower().split()[0] == 'veri':
             symbol = user_message.lower().split()[1]
-            database = TinyDB(f'{symbol}Follow.json')
-            data = database.all()
-            embedVar = discord.Embed(
-                title="Kayıtlı Veriler", description="", color=0x202124)
-            for ix in data:
-                puan = ix['puan']
-                fiyat = ix['fiyat']
-                zaman = ix['zaman']
-                embedVar.add_field(
-                    name=f'Puan : {puan}\n', value=f'{zaman}\nFiyat = {fiyat}', inline=True)
-            await message.channel.send(embed=embedVar)
+            if symbol == 'btc':
+                database = TinyDB('degisim.json')
+                data = database.all()
+                embedVar = discord.Embed(
+                    title="Kayıtlı Veriler", description="", color=0x202124)
+                for ix in data:
+                    puan = ix['puan']
+                    fiyat = ix['price']
+                    zaman = ix['zaman']
+                    embedVar.add_field(
+                        name=f'Puan : {puan}\n', value=f'{zaman}\nFiyat = {fiyat}', inline=True)
+                await message.channel.send(embed=embedVar)
+            else:
+                database = TinyDB(f'{symbol}Follow.json')
+                data = database.all()
+                embedVar = discord.Embed(
+                    title="Kayıtlı Veriler", description="", color=0x202124)
+                for ix in data:
+                    puan = ix['puan']
+                    fiyat = ix['fiyat']
+                    zaman = ix['zaman']
+                    embedVar.add_field(
+                        name=f'Puan : {puan}\n', value=f'{zaman}\nFiyat = {fiyat}', inline=True)
+                await message.channel.send(embed=embedVar)
         # veritabanına kayıt
         if user_message.lower().split()[0] == 'takip':
             symbol = user_message.lower().split()[1]
@@ -145,6 +177,13 @@ async def on_message(message):
                 else:
                     await message.channel.send(f'`{symbol}` aynı sembolu 2 kez takip edemezsin.')
 
+        # takip edilenleri göster
+        if user_message.lower() == 'takipler':
+            takipSdatabase = TinyDB('followed.json')
+            takipSdata = takipSdatabase.all()
+            for ixen in takipSdata:
+                symbol = ixen['sembol']
+                await message.channel.send(f'`{symbol}` takip ediliyor')
         # mevcut puanı göster
         if user_message.lower().split()[0] == 'puan':
             symbol = user_message.lower().split()[1]
@@ -167,7 +206,11 @@ async def on_message(message):
                     rate = dik['rate']
                     embedVar.add_field(
                         name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
-
+                elif dik['rate'] == 0.01:
+                    exchange = dik['exchange']
+                    rate = dik['rate']
+                    embedVar.add_field(
+                        name=f'Nötr\n{exchange}', value=f'{rate}', inline=True)
             await message.channel.send(embed=embedVar)
 
 client.loop.create_task(background_task())
