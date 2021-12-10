@@ -72,7 +72,7 @@ async def background_task():
             embedVar.add_field(
                 name="Funding Rate Puanı", value=f'({puan}) ', inline=False)
             embedVar.add_field(
-                name="İleri Seviye Analiz", value=f'({ileriDesc})\nPozisyon Değişimi\n%{ileriPercentage}', inline=False)
+                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
@@ -97,7 +97,7 @@ async def background_task():
             embedVar.add_field(
                 name="Funding Rate Puanı", value=f'({eskiPuan}) ---> ({puan})', inline=False)
             embedVar.add_field(
-                name="İleri Seviye Analiz", value=f'({ileriDesc})\nPozisyon Değişimi\n%{ileriPercentage}', inline=False)
+                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
@@ -191,10 +191,16 @@ async def on_message(message):
             item = func.spesifikFundingCalculate(symbol)
             allData = item['fundingData']
             puan = item['puan']
+            # ileri seviye analiz
+            ileriSeviyeSonuc = func.ileriSeviyeAnaliz(symbol)
+            ileriDesc = ileriSeviyeSonuc['desc']
+            #ileriPercentage = ileriSeviyeSonuc['openInterestPercentage']
             embedVar = discord.Embed(
-                title="Result ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
+                title="Sonuç ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
             embedVar.add_field(
-                name="Hesaplanan Puan", value=f'({puan}) ', inline=False)
+                name="Funding Rate Puanı", value=f'({puan}) ', inline=False)
+            embedVar.add_field(
+                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
