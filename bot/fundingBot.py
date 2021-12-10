@@ -29,92 +29,21 @@ async def background_task():
     channel = client.get_channel(id=914892130273624104)
 
     while not client.is_closed():
-        # takip edilen veri kayıdını göster
-        takipDatabase = TinyDB('followed.json')
-        takipData = takipDatabase.all()
-        if len(takipData) != 0:
-            for xe in takipData:
-                symbol = xe['sembol']
-                spItem = func.spesifikFundingCalculate(symbol)
-                spPrice = func.ticker_price(symbol)
-                spPuan = spItem['puan']
-                spNow = datetime.datetime.now()
-                spStringNow = spNow.strftime("%Y-%m-%d %H:%M")
-                spKayit = {
-                    "puan": spPuan,
-                    "fiyat": spPrice,
-                    "zaman": spStringNow
-                }
-                spDatabase = TinyDB(f'{symbol}Follow.json')
-                spDatabase.insert(spKayit)
-        else:
-            print('takip edilen sembol yok!')
-        # bitcoin kayıt ve göster
-        item = func.spesifikFundingCalculate('btc')
+        # await channel.send('test')
+        ileri = func.ileriSeviyeAnaliz('btc')
         price = func.ticker_price('btc')
-        allData = item['fundingData']
-        puan = item['puan']
         btcNow = datetime.datetime.now()
         btcStringNow = btcNow.strftime("%Y-%m-%d %H:%M")
-        kayitData = {'puan': puan, 'price': price, 'zaman': btcStringNow}
-        edatabase.insert(kayitData)
-        print('KAYIT YAPILDI')
-        # TAKİP ET
-        gecmisveri = edatabase.all()
-        time.sleep(0.5)
-        ileriSeviyeSonuc = func.ileriSeviyeAnaliz('btc')
-        ileriDesc = ileriSeviyeSonuc['desc']
-        ileriPercentage = ileriSeviyeSonuc['openInterestPercentage']
-
-        if gecmisveri[-1]['puan'] == gecmisveri[-2]['puan']:
-            embedVar = discord.Embed(
-                title="Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
-            embedVar.add_field(
-                name="Funding Rate Puanı", value=f'({puan}) ', inline=False)
-            embedVar.add_field(
-                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
-            for dik in allData:
-                if dik['rate'] > 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Negatif Etken\n{exchange}', value=f'{rate}', inline=True)
-                elif dik['rate'] < 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
-                elif dik['rate'] == 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Nötr\n{exchange}', value=f'{rate}', inline=True)
-            await channel.send(embed=embedVar)
-        else:
-            eskiPuan = gecmisveri[-2]['puan']
-            embedVar = discord.Embed(
-                title="Uyarı  ***", description=f'Bitcoin  {price}', color=0x202124)
-            embedVar.add_field(
-                name="Funding Rate Puanı", value=f'({eskiPuan}) ---> ({puan})', inline=False)
-            embedVar.add_field(
-                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
-            for dik in allData:
-                if dik['rate'] > 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Negatif Etken\n{exchange}', value=f'{rate}', inline=True)
-                elif dik['rate'] < 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Pozitif Etken\n{exchange}', value=f'{rate}', inline=True)
-                elif dik['rate'] == 0.01:
-                    exchange = dik['exchange']
-                    rate = dik['rate']
-                    embedVar.add_field(
-                        name=f'Nötr\n{exchange}', value=f'{rate}', inline=True)
-            await channel.send(embed=embedVar)
+        kayit = {
+            'fonlamaPuan': ileri['fundingRatePuan'],
+            'analizPuan': ileri['puan'],
+            'fiyat': price,
+            'zaman': btcStringNow
+        }
+        edatabase.insert(kayit)
+        fonlamaPuan = ileri['fundingRatePuan']
+        cokluAnaliz = ileri['puan']
+        await channel.send(f'** Bitcoin Uyarı **\nFonlama Oranı Puanı : `{fonlamaPuan}`\nÇoklu Analiz Puan = `{cokluAnaliz}`\nFiyat = `{price}`')
         await asyncio.sleep(14400)
 
 
@@ -128,62 +57,46 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.channel.name == 'analiz':
+        if user_message.lower() == 'veri':
+            data = edatabase.all()
+            embedVar = discord.Embed(
+                title="Bitcoin Kayıtlı Veriler", description="", color=0x202124)
+            for ix in data:
+                fonPuan = ix['fonlamaPuan']
+                analizPuan = ix['analizPuan']
+                fiyat = ix['fiyat']
+                zaman = ix['zaman']
+                embedVar.add_field(
+                    name=f'FonlamaPuan = `{fonPuan}`\nAnalizPuan = `{analizPuan}`', value=f'{zaman}\nFiyat = `{fiyat}`', inline=True)
+            await message.channel.send(embed=embedVar)
+        if user_message.lower() == 'piyasa':
+            item = func.liqidationCalculate()
+            fear = func.get_fear()
+            bubbleIndex = func.bitcoinBubbleIndex()
 
-        # veritabanındaki verileri göster
-        if user_message.lower().split()[0] == 'veri':
-            symbol = user_message.lower().split()[1]
-            if symbol == 'btc':
-                database = TinyDB('degisim.json')
-                data = database.all()
-                embedVar = discord.Embed(
-                    title="Kayıtlı Veriler", description="", color=0x202124)
-                for ix in data:
-                    puan = ix['puan']
-                    fiyat = ix['price']
-                    zaman = ix['zaman']
-                    embedVar.add_field(
-                        name=f'Puan : {puan}\n', value=f'{zaman}\nFiyat = {fiyat}', inline=True)
-                await message.channel.send(embed=embedVar)
-            else:
-                database = TinyDB(f'{symbol}Follow.json')
-                data = database.all()
-                embedVar = discord.Embed(
-                    title="Kayıtlı Veriler", description="", color=0x202124)
-                for ix in data:
-                    puan = ix['puan']
-                    fiyat = ix['fiyat']
-                    zaman = ix['zaman']
-                    embedVar.add_field(
-                        name=f'Puan : {puan}\n', value=f'{zaman}\nFiyat = {fiyat}', inline=True)
-                await message.channel.send(embed=embedVar)
-        # veritabanına kayıt
-        if user_message.lower().split()[0] == 'takip':
-            symbol = user_message.lower().split()[1]
-            price = func.ticker_price(symbol)
-            if price == 'error':
-                await message.channel.send(f'//{symbol}// Hatalı Sembol Girdiniz...')
-            else:
-                database = TinyDB("followed.json")
-                User = Query()
-                check = database.search(User.sembol == symbol)
-                print(len(check))
-                if len(check) == 0:
-                    if symbol != 'btc':
-                        kayit = {"sembol": symbol}
-                        database.insert(kayit)
-                        await message.channel.send(f'`{symbol}` için veritabanı takibi açıldı')
-                    else:
-                        await message.channel.send(f'`{symbol}` takip edemezsiniz')
-                else:
-                    await message.channel.send(f'`{symbol}` aynı sembolu 2 kez takip edemezsin.')
+            index = bubbleIndex['bubbleIndex']
+            googleTrends = bubbleIndex['googleTrends']
+            bitcoinTweets = bubbleIndex['bitcoinTweets']
 
-        # takip edilenleri göster
-        if user_message.lower() == 'takipler':
-            takipSdatabase = TinyDB('followed.json')
-            takipSdata = takipSdatabase.all()
-            for ixen in takipSdata:
-                symbol = ixen['sembol']
-                await message.channel.send(f'`{symbol}` takip ediliyor')
+            fearValue = fear['puan']
+            fearName = fear['aciklama']
+
+            long = item['liqLong']
+            short = item['liqShort']
+            price = func.ticker_price('btc')
+
+            embedVar = discord.Embed(
+                title="Bitcoin Piyasa Durumu", description="", color=0xf44336)
+            embedVar.add_field(
+                name="Güncel Bitcoin Fiyatı", value=f'{price} USD', inline=False)
+            embedVar.add_field(
+                name="Piyasa Tasfiyesi", value=f'LONG %{long} SHORT %{short} Liquidation', inline=False)
+            embedVar.add_field(
+                name="Greed & Fear Index", value=f'({fearValue}  {fearName})', inline=False)
+            embedVar.add_field(
+                name="Bitcoin Bubble Verisi", value=f'( Puan = {index} (100 < Pozitif))\n( Google Trend = {googleTrends})\n( Bitcoin Tweets = {bitcoinTweets})', inline=False)
+            await message.channel.send(embed=embedVar)
+            return
         # mevcut puanı göster
         if user_message.lower().split()[0] == 'puan':
             symbol = user_message.lower().split()[1]
@@ -193,14 +106,18 @@ async def on_message(message):
             puan = item['puan']
             # ileri seviye analiz
             ileriSeviyeSonuc = func.ileriSeviyeAnaliz(symbol)
-            ileriDesc = ileriSeviyeSonuc['desc']
-            #ileriPercentage = ileriSeviyeSonuc['openInterestPercentage']
+            ileriPuan = ileriSeviyeSonuc['puan']
+            pozitifDesc = ileriSeviyeSonuc['pozitifDesc']
+            negatifDesc = ileriSeviyeSonuc['negatifDesc']
+            # ileriPercentage = ileriSeviyeSonuc['openInterestPercentage']
             embedVar = discord.Embed(
                 title="Sonuç ***", description=f'{symbol} - ( {price} USD)', color=0x202124)
             embedVar.add_field(
-                name="Funding Rate Puanı", value=f'({puan}) ', inline=False)
+                name="Fonlama Oranı Puanı", value=f'({puan}) ', inline=False)
             embedVar.add_field(
-                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)", value=f'Sonuç = `{ileriDesc}`', inline=False)
+                name="İleri Seviye Analizi\n(Fonlama Oranı, Korku Endeksi, Açık Pozisyonlar, Fiyat Değişimleri)",
+                value=f'Puan = `{ileriPuan}`\nPozitif = `{pozitifDesc}`\nNegatif = `{negatifDesc}`',
+                inline=False)
             for dik in allData:
                 if dik['rate'] > 0.01:
                     exchange = dik['exchange']
