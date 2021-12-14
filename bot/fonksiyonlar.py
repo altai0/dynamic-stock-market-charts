@@ -1,10 +1,10 @@
 import ccxt
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
+# import plotly.express as px
+# import plotly.graph_objects as go
+# import pandas as pd
 import requests
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 
 class funcAnalysis():
@@ -45,43 +45,43 @@ class funcAnalysis():
         }
         return item
 
-    def alim_emir(self, symbol):
-        binance = ccxt.binance()
-        orderbook = binance.fetch_order_book(
-            symbol.upper()+'/USDT', limit=1000)
-        bids = orderbook['bids']
-        fig = go.Figure()
-        bids_price = []
-        bids_qt = []
-        for bid in bids:
-            bids_price.append(bid[0])
-            bids_qt.append(bid[1])
-        d = {'bids_price': bids_price, 'bids_qty': bids_qt}
-        df = pd.DataFrame(data=d)
+    # def alim_emir(self, symbol):
+    #     binance = ccxt.binance()
+    #     orderbook = binance.fetch_order_book(
+    #         symbol.upper()+'/USDT', limit=1000)
+    #     bids = orderbook['bids']
+    #     fig = go.Figure()
+    #     bids_price = []
+    #     bids_qt = []
+    #     for bid in bids:
+    #         bids_price.append(bid[0])
+    #         bids_qt.append(bid[1])
+    #     d = {'bids_price': bids_price, 'bids_qty': bids_qt}
+    #     df = pd.DataFrame(data=d)
 
-        fig = px.density_heatmap(df, x="bids_price", y="bids_qty",
-                                 title='Alım Emirleri Isı Haritası')
+    #     fig = px.density_heatmap(df, x="bids_price", y="bids_qty",
+    #                              title='Alım Emirleri Isı Haritası')
 
-        fig.write_image('alim.png')
+    #     fig.write_image('alim.png')
 
-    def satim_emir(self, symbol):
-        binance = ccxt.binance()
-        orderbook = binance.fetch_order_book(
-            symbol.upper()+'/USDT', limit=1000)
-        asks = orderbook['asks']
-        fig = go.Figure()
-        ask_price = []
-        ask_qt = []
-        for ask in asks:
-            ask_price.append(ask[0])
-            ask_qt.append(ask[1])
-        d = {'asks_price': ask_price, 'asks_qty': ask_qt}
-        df = pd.DataFrame(data=d)
+    # def satim_emir(self, symbol):
+    #     binance = ccxt.binance()
+    #     orderbook = binance.fetch_order_book(
+    #         symbol.upper()+'/USDT', limit=1000)
+    #     asks = orderbook['asks']
+    #     fig = go.Figure()
+    #     ask_price = []
+    #     ask_qt = []
+    #     for ask in asks:
+    #         ask_price.append(ask[0])
+    #         ask_qt.append(ask[1])
+    #     d = {'asks_price': ask_price, 'asks_qty': ask_qt}
+    #     df = pd.DataFrame(data=d)
 
-        fig = px.density_heatmap(df, x="asks_price", y="asks_qty",
-                                 title='Satım Emirleri Isı Haritası')
+    #     fig = px.density_heatmap(df, x="asks_price", y="asks_qty",
+    #                              title='Satım Emirleri Isı Haritası')
 
-        fig.write_image('satim.png')
+    #     fig.write_image('satim.png')
 
     def ticker_price(self, symbol):
         try:
@@ -185,12 +185,10 @@ class funcAnalysis():
         return item
 
     def ileriSeviyeAnaliz(self, symbol):
-
         item = self.spesifikFundingCalculate(symbol)
         percentage = self.ticker_price_24h(symbol)
         fearIndex = self.get_fear()
         openInterest = self.fetch_open_interest()
-
         puan = 0
         pozitifText = ''
         negatifText = ''

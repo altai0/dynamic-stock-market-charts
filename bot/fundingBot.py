@@ -3,11 +3,8 @@ import requests
 import json
 import ccxt
 import time
-import discord
 from tinydb import TinyDB, Query
 import asyncio
-
-import tinydb
 import fonksiyonlar
 import datetime
 
