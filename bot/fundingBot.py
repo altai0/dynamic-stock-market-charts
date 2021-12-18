@@ -2,7 +2,7 @@ import discord
 import requests
 import json
 import ccxt
-import time
+import time  # botu durduruyor kullanma
 from tinydb import TinyDB, Query
 import asyncio
 import fonksiyonlar
@@ -26,7 +26,8 @@ async def background_task():
     channel = client.get_channel(id=914892130273624104)
 
     while not client.is_closed():
-        # await channel.send('test')
+
+        # PUAN UYARI
         ileri = func.ileriSeviyeAnaliz('btc')
         price = func.ticker_price('btc')
         btcNow = datetime.datetime.now()
