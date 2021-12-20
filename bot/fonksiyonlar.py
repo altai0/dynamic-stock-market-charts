@@ -17,11 +17,11 @@ class funcAnalysis():
         res = req.json()
         return res
 
-    def fibChart(self, sembol):
+    def fibChart(self, sembol, timeframe):
         binance = ccxt.binance()
         symbol = sembol
         bars = binance.fetch_ohlcv(
-            symbol.upper()+'/USDT', timeframe='1d', limit=120)
+            symbol.upper()+'/USDT', timeframe=str(timeframe))
         df = pd.DataFrame(
             bars, columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
         highest_swing = -1
@@ -53,6 +53,7 @@ class funcAnalysis():
             plt.hlines(levels[i], start_date, end_date, label="{:.1f}%".format(
                 ratios[i]*100), colors=colors[i], linestyles="dashed")
         plt.legend()
+        plt.title(str(symbol) + ' Fibonacci ' + str(timeframe))
         plt.savefig('fib.png')
         plt.close()
 

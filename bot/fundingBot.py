@@ -193,7 +193,8 @@ async def on_message(message):
         # fib chart
         if user_message.lower().split()[0] == 'fib':
             symbol = user_message.lower().split()[1]
-            func.fibChart(symbol)
+            timeframe = user_message.lower().split()[2]
+            func.fibChart(symbol, timeframe)
             await message.channel.send(file=discord.File('fib.png'))
         # destek direnç
         if user_message.lower().split()[0] == 'grafik':
