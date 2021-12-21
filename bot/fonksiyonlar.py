@@ -1,6 +1,6 @@
 import ccxt
-# import plotly.express as px
-# import plotly.graph_objects as go
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
 import requests
 import matplotlib.pyplot as plt
@@ -24,6 +24,9 @@ class funcAnalysis():
             symbol.upper()+'/USDT', timeframe=str(timeframe))
         df = pd.DataFrame(
             bars, columns=['Date', 'Open', 'High', 'Low', 'Close', 'Volume'])
+
+        df = df.iloc[::-1]
+        df['Date'] = pd.to_datetime(df['Date'], unit='ms')
         highest_swing = -1
         lowest_swing = -1
         for i in range(1, df.shape[0]-1):
@@ -32,7 +35,7 @@ class funcAnalysis():
             if df['Low'][i] < df['Low'][i-1] and df['Low'][i] < df['Low'][i+1] and (lowest_swing == -1 or df['Low'][i] < df['Low'][lowest_swing]):
                 lowest_swing = i
         ratios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1]
-        colors = ["white", "r", "g", "b", "cyan", "magenta", "yellow"]
+        colors = ["white", "red", "green", "blue", "cyan", "magenta", "yellow"]
         levels = []
         max_level = df['High'][highest_swing]
         min_level = df['Low'][lowest_swing]
@@ -41,21 +44,29 @@ class funcAnalysis():
                 levels.append(max_level - (max_level-min_level)*ratio)
             else:  # Downtrend
                 levels.append(min_level + (max_level-min_level)*ratio)
-        plt.rcParams['figure.figsize'] = [12, 7]
-        plt.rc('font', size=14)
-        xs = np.linspace(1, 21, 200)
-
-        plt.style.use('dark_background')
-        plt.plot(df['Close'])
         start_date = df.index[min(highest_swing, lowest_swing)]
         end_date = df.index[max(highest_swing, lowest_swing)]
+        fig = go.Figure(data=[go.Candlestick(x=df['Date'], open=df['Open'],
+                                             high=df['High'], low=df['Low'], close=df['Close'], increasing_line_color='gray', decreasing_line_color='#C00000')])
+        fig.update_layout(
+            xaxis_rangeslider_visible=False,
+            autosize=False,
+            width=1920,
+            height=1080,
+            template='plotly_dark',
+            title=symbol.upper() + ' - Fibonacci ' + str(timeframe))
         for i in range(len(levels)):
-            plt.hlines(levels[i], start_date, end_date, label="{:.1f}%".format(
-                ratios[i]*100), colors=colors[i], linestyles="dashed")
-        plt.legend()
-        plt.title(str(symbol) + ' Fibonacci ' + str(timeframe))
-        plt.savefig('fib.png')
-        plt.close()
+            fig.add_hline(
+                y=levels[i],
+                line_dash="dot",
+                row=3,
+                col="all",
+                annotation_text=str("{:.1f}%".format(
+                    ratios[i]*100)),
+                annotation_position="bottom right",
+                line_color=colors[i],
+            )
+        fig.write_image('fib.png')
 
     def bitcoinBubbleIndex(self):
         req = requests.get(
@@ -84,44 +95,6 @@ class funcAnalysis():
             'avgRate': lastRate
         }
         return item
-
-    # def alim_emir(self, symbol):
-    #     binance = ccxt.binance()
-    #     orderbook = binance.fetch_order_book(
-    #         symbol.upper()+'/USDT', limit=1000)
-    #     bids = orderbook['bids']
-    #     fig = go.Figure()
-    #     bids_price = []
-    #     bids_qt = []
-    #     for bid in bids:
-    #         bids_price.append(bid[0])
-    #         bids_qt.append(bid[1])
-    #     d = {'bids_price': bids_price, 'bids_qty': bids_qt}
-    #     df = pd.DataFrame(data=d)
-
-    #     fig = px.density_heatmap(df, x="bids_price", y="bids_qty",
-    #                              title='Alım Emirleri Isı Haritası')
-
-    #     fig.write_image('alim.png')
-
-    # def satim_emir(self, symbol):
-    #     binance = ccxt.binance()
-    #     orderbook = binance.fetch_order_book(
-    #         symbol.upper()+'/USDT', limit=1000)
-    #     asks = orderbook['asks']
-    #     fig = go.Figure()
-    #     ask_price = []
-    #     ask_qt = []
-    #     for ask in asks:
-    #         ask_price.append(ask[0])
-    #         ask_qt.append(ask[1])
-    #     d = {'asks_price': ask_price, 'asks_qty': ask_qt}
-    #     df = pd.DataFrame(data=d)
-
-    #     fig = px.density_heatmap(df, x="asks_price", y="asks_qty",
-    #                              title='Satım Emirleri Isı Haritası')
-
-    #     fig.write_image('satim.png')
 
     def ticker_price(self, symbol):
         try:
