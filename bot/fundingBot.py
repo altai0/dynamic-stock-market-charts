@@ -13,8 +13,8 @@ import datetime
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-
-TOKEN = 'OTE0ODQ5MTIyMzgzNzI0NTU1.YaTBow.ouOKIutxB3GAHzoPPMVSLMf_Z08'
+# this is a discord bot
+TOKEN = 'TOKEN'
 edatabase = TinyDB('degisim.json')
 exchange = ccxt.binance()
 client = discord.Client()
@@ -73,7 +73,7 @@ def get_chart(pair, time):
 
 @client.event
 async def on_ready():
-    print('! funding rate analiz botu başladı !')
+    print('! rate bot started! !')
 
 
 async def background_task():
